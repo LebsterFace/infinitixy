@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- Website designed by "Lebster" -->
+<!-- Date created: 30th September 2023 -->
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="style.css">
+		<title>Document</title>
+	</head>
+	<body>
+		<canvas width="1920" height="1080"></canvas>
+		<label for="code">
+			(t, x, y, mx, my) =>
+			<input type="text" name="code" id="code" placeholder="..." value="sin(t - hypot(x, y))">
+		</label>
+		<div id="settings">
+			<label for="circles">
+				<input type="checkbox" name="circles" id="circles" checked>
+				Use Circles
+			</label>
+			<label for="cartesian">
+				<input type="checkbox" name="cartesian" id="cartesian" checked>
+				Cartesian
+			</label>
+			<label for="clamp">
+				<input type="checkbox" name="clamp" id="clamp" checked>
+				Clamp
+			</label>
+			<label for="fps">
+				<input type="checkbox" name="fps" id="fps">
+				Show FPS
+			</label>
+			<label for="debug">
+				<input type="checkbox" name="debug" id="debug">
+				Debug
+			</label>
+		</div>
+		<div id="buttons">
+			<button id="resetCamera">Reset Camera</button>
+			<button id="fullscreen">Fullscreen</button>
+		</div>
+		<script src="dist/index.js"></script>
+	</body>
+</html>

@@ -1,0 +1,7 @@
+{
+	"devDependencies": {
+		"typescript": "^5.2.2"
+	},
+	"type": "module",
+	"main": "dist/index.js"
+}

@@ -1,0 +1,56 @@
+body {
+	background: #000;
+	margin: 0;
+	display: grid;
+	place-items: center;
+	height: 100vh;
+	color: white;
+	font-family: 'Roboto Mono', monospace;
+	padding: 1em;
+	box-sizing: border-box;
+}
+
+canvas {
+	max-width: 85vw;
+	max-height: 85vh;
+}
+
+#settings {
+	display: flex;
+	gap: 1em;
+}
+
+#code {
+	background: none;
+	border: none;
+	outline: none;
+	box-sizing: border-box;
+	padding: 7px;
+	width: 80vw;
+	border-radius: 5px;
+	background: #0a0a0a;
+	color: white;
+	font-family: 'Roboto Mono', monospace;
+}
+
+button {
+	background: #0a0a0a;
+	color: white;
+	border: none;
+	outline: none;
+	border-radius: 5px;
+	padding: 7px 15px;
+	cursor: pointer;
+	font-family: 'Roboto Mono', monospace;
+	transition: transform 50ms ease;
+}
+
+button:hover {
+	background: #222;
+	transform: scale(1.05);
+}
+
+button:active {
+	background: #222;
+	transform: scale(0.95);
+}
