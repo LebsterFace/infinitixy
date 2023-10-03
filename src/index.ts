@@ -38,7 +38,12 @@ const START_X = -15.5;
 const START_Y = -8.5;
 const START_SCALE = canvas.height / 18;
 
-const camera = { x: START_X, y: START_Y, scale: START_SCALE };
+const camera = {
+	x: START_X,
+	y: START_Y,
+	scale: START_SCALE,
+	velocity: { x: 0, y: 0, scale: 0 }
+};
 
 let mouseDown = false;
 let mouseX = 0;
@@ -60,10 +65,16 @@ window.addEventListener("mousemove", ({ movementX, movementY, clientX, clientY }
 }, { passive: true });
 
 canvas.addEventListener("wheel", ({ deltaY }) => {
-	const oldScale = camera.scale;
-	const zoomFactor = 0.1; // Adjust this value as needed for the zoom speed
-	const newScale = Math.min(1000, Math.max(10, camera.scale * (1 + (deltaY > 0 ? -zoomFactor : zoomFactor))));
+	camera.velocity.scale += deltaY;
+}, { passive: true });
 
+const updateCamera = () => {
+	camera.velocity.scale *= 0.8;
+
+	const oldScale = camera.scale;
+	const zoomFactor = camera.velocity.scale / -4000;
+	// const newScale = Math.min(1000, Math.max(10, camera.scale * (1 + (deltaY > 0 ? -zoomFactor : zoomFactor))));
+	const newScale = Math.min(1000, Math.max(10, camera.scale * (1 + zoomFactor)));
 
 	// Calculate the center point in canvas coordinates
 	const centerX = canvas.width / 2;
@@ -79,7 +90,7 @@ canvas.addEventListener("wheel", ({ deltaY }) => {
 	// Adjust camera position to keep the center fixed
 	camera.x = centerFnSpaceX - (centerX / newScale);
 	camera.y = centerFnSpaceY - (centerY / newScale);
-}, { passive: true });
+};
 
 const FRAME_TIMES = Array.from({ length: 30 }, () => 16.666);
 let lastFrameTime = performance.now();
@@ -143,6 +154,8 @@ document.querySelector("#fullscreen")!.addEventListener("click", () => {
 }, { passive: true });
 
 const redraw = () => {
+	updateCamera();
+
 	const time = (performance.now() - TIME_START) / 1000;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
