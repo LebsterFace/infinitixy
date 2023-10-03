@@ -113,7 +113,7 @@ const settings = {
 	useCircles: true,
 	clampValues: true,
 	cartesian: true,
-	grid: true,
+	grid: false,
 	showFPS: false
 };
 
@@ -151,7 +151,7 @@ const redraw = () => {
 	const fnSpaceRight = Math.ceil(camera.x + (canvas.width / camera.scale));
 	const fnSpaceBottom = Math.ceil(camera.y + (canvas.height / camera.scale));
 
-	ctx.font = `${camera.scale / 5}px Computer Modern Serif, serif`;
+	ctx.font = `${camera.scale / 8}px Computer Modern Serif, serif`;
 	ctx.textAlign = 'center';
 	ctx.textBaseline = 'middle';
 
