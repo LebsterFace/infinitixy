@@ -81,10 +81,6 @@ canvas.addEventListener("wheel", ({ deltaY }) => {
 	camera.y = centerFnSpaceY - (centerY / newScale);
 }, { passive: true });
 
-ctx.font = '24px JetBrains Mono';
-ctx.textAlign = 'center';
-ctx.textBaseline = 'middle';
-
 const FRAME_TIMES = Array.from({ length: 30 }, () => 16.666);
 let lastFrameTime = performance.now();
 
@@ -117,16 +113,16 @@ const settings = {
 	useCircles: true,
 	clampValues: true,
 	cartesian: true,
-	showFPS: false,
-	debug: false
+	grid: true,
+	showFPS: false
 };
 
 const checkboxes: Record<keyof typeof settings, HTMLInputElement> = {
 	useCircles: document.querySelector("#circles")!,
 	clampValues: document.querySelector("#clamp")!,
 	cartesian: document.querySelector("#cartesian")!,
-	showFPS: document.querySelector("#fps")!,
-	debug: document.querySelector("#debug")!
+	grid: document.querySelector("#grid")!,
+	showFPS: document.querySelector("#fps")!
 };
 
 for (const [key, element] of Object.entries(checkboxes) as Array<[keyof typeof settings, HTMLInputElement]>) {
@@ -155,6 +151,9 @@ const redraw = () => {
 	const fnSpaceRight = Math.ceil(camera.x + (canvas.width / camera.scale));
 	const fnSpaceBottom = Math.ceil(camera.y + (canvas.height / camera.scale));
 
+	ctx.font = `${camera.scale / 5}px Computer Modern Serif, serif`;
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
 
 	for (let y = fnSpaceTop; y < fnSpaceBottom; y++) {
 		for (let x = fnSpaceLeft; x < fnSpaceRight; x++) {
@@ -163,6 +162,7 @@ const redraw = () => {
 
 			const rectX = (x * camera.scale) - (camera.scale * camera.x);
 			const rectY = (y * camera.scale) - (camera.scale * camera.y);
+
 			let tixyColor = userFunc(
 				time,
 				fnSpaceX,
@@ -183,18 +183,26 @@ const redraw = () => {
 				ctx.fillRect(rectX, rectY, camera.scale + 1, camera.scale + 1);
 			}
 
+			if (settings.grid) {
+				ctx.fillStyle = '#0008';
+				ctx.fillRect(rectX, rectY, camera.scale, camera.scale);
+				ctx.strokeStyle = '#222';
+				ctx.beginPath();
+				ctx.moveTo(rectX, 0);
+				ctx.lineTo(rectX, canvas.height);
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(0, rectY);
+				ctx.lineTo(canvas.width, rectY);
+				ctx.stroke();
 
-			if (settings.debug) {
-				ctx.strokeStyle = '#0FF';
-				ctx.strokeRect(rectX, rectY, camera.scale + 1, camera.scale + 1);
+				ctx.shadowColor = "#000";
+				ctx.shadowBlur = 5;
+				ctx.fillStyle = fnSpaceY === 0 || fnSpaceX === 0 ? '#FF0' : '#EEE';
+				ctx.fillText(`(${fnSpaceX.toLocaleString()}, ${fnSpaceY.toLocaleString()})`, rectX + camera.scale / 2, rectY + camera.scale / 2);
+				ctx.shadowColor = "#0000";
 			}
 		}
-	}
-
-	if (settings.debug) {
-		ctx.fillStyle = '#F0F';
-		ctx.fillRect(0, canvas.height / 2, canvas.width, 1);
-		ctx.fillRect(canvas.width / 2, 0, 1, canvas.height);
 	}
 };
 
