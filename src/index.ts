@@ -69,12 +69,16 @@ window.addEventListener("mousemove", ({ movementX, movementY, clientX, clientY }
 }, { passive: true });
 
 canvas.addEventListener("wheel", ({ deltaY }) => {
-	camera.scaleVelocity += deltaY;
+	if (settings.smoothZoom) {
+		camera.scaleVelocity += deltaY;
+	} else {
+		zoomBy(0.1 * (deltaY > 0 ? -1 : 1));
+	}
 }, { passive: true });
 
 const lerp = (start: number, end: number, t: number): number => (1 - t) * start + t * end;
 
-const fixPositionForZoom = (oldScale: number, newScale: number, container: { x: number, y: number }) => {
+const fixPositionForZoom = (oldScale: number, newScale: number, container: { x: number, y: number; }) => {
 	// Convert the center point to function space coordinates
 	const centerFnSpaceX = (centerX / oldScale) + container.x;
 	const centerFnSpaceY = (centerY / oldScale) + container.y;
@@ -84,16 +88,26 @@ const fixPositionForZoom = (oldScale: number, newScale: number, container: { x: 
 	container.y = centerFnSpaceY - (centerY / newScale);
 };
 
-const updateCamera = () => {
-	camera.x = lerp(camera.x, camera.target.x, 0.2);
-	camera.y = lerp(camera.y, camera.target.y, 0.2);
-
-	camera.scaleVelocity *= 0.8;
-	const zoomFactor = camera.scaleVelocity / -4000;
+const zoomBy = (zoomFactor: number) => {
 	const newScale = Math.min(1000, Math.max(10, camera.scale * (1 + zoomFactor)));
 	fixPositionForZoom(camera.scale, newScale, camera);
 	fixPositionForZoom(camera.scale, newScale, camera.target);
 	camera.scale = newScale;
+};
+
+const updateCamera = () => {
+	if (settings.smoothPan) {
+		camera.x = lerp(camera.x, camera.target.x, 0.2);
+		camera.y = lerp(camera.y, camera.target.y, 0.2);
+	} else {
+		camera.x = camera.target.x;
+		camera.y = camera.target.y;
+	}
+
+	if (settings.smoothZoom) {
+		camera.scaleVelocity *= 0.8;
+		zoomBy(camera.scaleVelocity / -4000);
+	}
 };
 
 const FRAME_TIMES = Array.from({ length: 30 }, () => 16.666);
@@ -129,6 +143,8 @@ const settings = {
 	clampValues: true,
 	cartesian: true,
 	grid: false,
+	smoothZoom: true,
+	smoothPan: true,
 	showFPS: false
 };
 
@@ -137,6 +153,8 @@ const checkboxes: Record<keyof typeof settings, HTMLInputElement> = {
 	clampValues: document.querySelector("#clamp")!,
 	cartesian: document.querySelector("#cartesian")!,
 	grid: document.querySelector("#grid")!,
+	smoothZoom: document.querySelector("#smooth-zoom")!,
+	smoothPan: document.querySelector("#smooth-pan")!,
 	showFPS: document.querySelector("#fps")!
 };
 
