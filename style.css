@@ -54,3 +54,8 @@ button:active {
 	background: #222;
 	transform: scale(0.95);
 }
+
+label:has(:disabled), :disabled {
+	text-decoration: line-through;
+	opacity: 0.5;
+}

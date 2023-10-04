@@ -6,12 +6,12 @@ const ctx = canvas.getContext("2d")!;
 
 let userFunc = (
 	t: number,
+	i: number,
 	x: number,
 	y: number,
 	mx: number,
 	my: number,
-	si: number,
-	sc: number
+	c: number
 ) => 0;
 
 let TIME_START = 0;
@@ -20,7 +20,7 @@ const MathDestructure = `const {${Object.getOwnPropertyNames(Math).join(",")}} =
 const setFunc = () => {
 	try {
 		// @ts-ignore
-		userFunc = new Function("t", "x", "y", "mx", "my", "si", "sc", `${MathDestructure};try{return ${codeInput.value};}catch (e){return 0;}`);
+		userFunc = new Function("t", "i", "x", "y", "mx", "my", "c", `${MathDestructure};try{return ${codeInput.value};}catch (e){return 0;}`);
 	} catch (e) {
 		userFunc = () => 0;
 	}
@@ -39,17 +39,63 @@ const circleToPixelColor = (v: number): `rgb(${number} ${number} ${number})` => 
 	return `rgb(${r} ${g} ${b})`;
 };
 
-const START_X = -15.5;
-const START_Y = -8.5;
-const START_SCALE = canvas.height / 18;
-
-const camera = {
-	x: START_X,
-	y: START_Y,
-	scale: START_SCALE,
-	scaleVelocity: 0,
-	target: { x: START_X, y: START_Y }
+const settings = {
+	useCircles: true,
+	cartesian: true,
+	grid: false,
+	tixyEmulator: false,
+	smoothZoom: true,
+	smoothPan: true,
+	showFPS: false
 };
+
+const checkboxes: Record<keyof typeof settings, HTMLInputElement> = {
+	useCircles: document.querySelector("#circles")!,
+	cartesian: document.querySelector("#cartesian")!,
+	grid: document.querySelector("#grid")!,
+	tixyEmulator: document.querySelector("#tixy-emulator")!,
+	smoothZoom: document.querySelector("#smooth-zoom")!,
+	smoothPan: document.querySelector("#smooth-pan")!,
+	showFPS: document.querySelector("#fps")!
+};
+
+for (const [key, element] of Object.entries(checkboxes) as Array<[keyof typeof settings, HTMLInputElement]>) {
+	element.checked = settings[key];
+	element.addEventListener("input", () => {
+		settings[key] = element.checked;
+	}, { passive: true });
+}
+
+let camera = { x: NaN, y: NaN, scale: NaN, scaleVelocity: NaN, target: { x: NaN, y: NaN } };
+const centerCamera = (cx: number, cy: number, scale: number) => {
+	const x = -(centerX / scale) + cx;
+	const y = -(centerY / scale) + cy;
+
+	camera = {
+		x, y,
+		scale: scale, scaleVelocity: 0,
+		target: { x, y }
+	};
+};
+
+const resetCamera = () => {
+	if (settings.tixyEmulator) {
+		centerCamera(8, 8, canvas.height / 17);
+	} else {
+		centerCamera(0.5, 0.5, canvas.height / 18);
+	}
+};
+
+resetCamera();
+
+document.querySelector("#resetCamera")!.addEventListener("click", resetCamera, { passive: true });
+
+checkboxes.tixyEmulator.addEventListener("input", () => {
+	resetCamera();
+	checkboxes.cartesian.disabled = checkboxes.tixyEmulator.checked;
+}, { passive: true });
+
+document.querySelector("#fullscreen")!.addEventListener("click", () => canvas.requestFullscreen(), { passive: true });
 
 let mouseDown = false;
 let mouseX = 0;
@@ -140,59 +186,47 @@ const drawCounter = () => {
 	ctx.fillText(MSG, 10, 10);
 };
 
-const settings = {
-	useCircles: true,
-	cartesian: true,
-	grid: false,
-	smoothZoom: true,
-	smoothPan: true,
-	showFPS: false
+const fixCartesianality = (y: number) => {
+	if (settings.tixyEmulator) return y;
+	return settings.cartesian ? -y + 0.0 : y;
 };
-
-const checkboxes: Record<keyof typeof settings, HTMLInputElement> = {
-	useCircles: document.querySelector("#circles")!,
-	cartesian: document.querySelector("#cartesian")!,
-	grid: document.querySelector("#grid")!,
-	smoothZoom: document.querySelector("#smooth-zoom")!,
-	smoothPan: document.querySelector("#smooth-pan")!,
-	showFPS: document.querySelector("#fps")!
-};
-
-for (const [key, element] of Object.entries(checkboxes) as Array<[keyof typeof settings, HTMLInputElement]>) {
-	element.checked = settings[key];
-	element.addEventListener("click", () => {
-		settings[key] = element.checked;
-	}, { passive: true });
-}
-
-document.querySelector("#resetCamera")!.addEventListener("click", () => {
-	camera.x = START_X;
-	camera.y = START_Y;
-	camera.target.x = START_X;
-	camera.target.y = START_Y;
-	camera.scale = START_SCALE;
-	camera.scaleVelocity = 0;
-}, { passive: true });
-
-document.querySelector("#fullscreen")!.addEventListener("click", () => {
-	canvas.requestFullscreen();
-}, { passive: true });
 
 const canvasSpaceToFnSpace = (x: number, y: number) => {
 	const fnSpaceX = ((x - camera.scale / 2) + (camera.scale * camera.x)) / camera.scale;
 	const fnSpaceY = ((y - camera.scale / 2) + (camera.scale * camera.y)) / camera.scale;
-	return [fnSpaceX, settings.cartesian ? -fnSpaceY + 0.0 : fnSpaceY];
+	return [fnSpaceX, fixCartesianality(fnSpaceY)] as const;
+};
+
+// Assumes cartesian = false
+const fnSpaceToCanvasSpace = (x: number, y: number) => {
+	const canvasSpaceX = camera.scale * (x - camera.x);
+	const canvasSpaceY = camera.scale * (y - camera.y);
+	return [canvasSpaceX, canvasSpaceY] as const;
 };
 
 const redraw = () => {
 	const time = (performance.now() - TIME_START) / 1000;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-	const fnSpaceLeft = Math.floor(camera.x);
-	const fnSpaceTop = Math.floor(camera.y);
-	const fnSpaceRight = Math.ceil(camera.x + (canvas.width / camera.scale));
-	const fnSpaceBottom = Math.ceil(camera.y + (canvas.height / camera.scale));
 	const [fnSpaceMouseX, fnSpaceMouseY] = canvasSpaceToFnSpace(mouseX, mouseY);
+
+	const fnSpaceLeft = settings.tixyEmulator ? 0 : Math.floor(camera.x);
+	const fnSpaceTop = settings.tixyEmulator ? 0 : Math.floor(camera.y);
+	const fnSpaceRight = settings.tixyEmulator ? 16 : Math.ceil(camera.x + (canvas.width / camera.scale));
+	const fnSpaceBottom = settings.tixyEmulator ? 16 : Math.ceil(camera.y + (canvas.height / camera.scale));
+
+	let gridX1 = 0;
+	let gridX2 = canvas.width;
+	let gridY1 = 0;
+	let gridY2 = canvas.height;
+	if (settings.tixyEmulator) {
+		const [x1, y1] = fnSpaceToCanvasSpace(0, 0);
+		const [x2, y2] = fnSpaceToCanvasSpace(16, 16);
+		gridX1 = x1;
+		gridX2 = x2;
+		gridY1 = y1;
+		gridY2 = y2;
+	}
 
 	ctx.font = `${camera.scale / 8}px Computer Modern Serif, serif`;
 	ctx.textAlign = 'center';
@@ -204,18 +238,18 @@ const redraw = () => {
 		for (let x = fnSpaceLeft; x < fnSpaceRight; x++) {
 			screenIndex++;
 			const fnSpaceX = x;
-			const fnSpaceY = settings.cartesian ? -y + 0.0 : y;
+			const fnSpaceY = fixCartesianality(y);
 
 			const rectX = (x * camera.scale) - (camera.scale * camera.x);
 			const rectY = (y * camera.scale) - (camera.scale * camera.y);
 
 			let tixyColor = userFunc(
 				time,
+				screenIndex,
 				fnSpaceX,
 				fnSpaceY,
 				fnSpaceMouseX,
 				fnSpaceMouseY,
-				screenIndex,
 				screenCount
 			);
 
@@ -235,22 +269,34 @@ const redraw = () => {
 				ctx.fillStyle = '#0008';
 				ctx.fillRect(rectX, rectY, camera.scale, camera.scale);
 				ctx.strokeStyle = '#222';
+				ctx.lineWidth = 3;
 				ctx.beginPath();
-				ctx.moveTo(rectX, 0);
-				ctx.lineTo(rectX, canvas.height);
+				ctx.moveTo(rectX, gridY1);
+				ctx.lineTo(rectX, gridY2);
 				ctx.stroke();
 				ctx.beginPath();
-				ctx.moveTo(0, rectY);
-				ctx.lineTo(canvas.width, rectY);
+				ctx.moveTo(gridX1, rectY);
+				ctx.lineTo(gridX2, rectY);
 				ctx.stroke();
 
 				ctx.shadowColor = "#000";
 				ctx.shadowBlur = 5;
-				ctx.fillStyle = fnSpaceY === 0 || fnSpaceX === 0 ? '#FF0' : '#EEE';
+				ctx.fillStyle = (fnSpaceY === 0 || fnSpaceX === 0) && !settings.tixyEmulator ? '#FF0' : '#EEE';
 				ctx.fillText(`(${fnSpaceX.toLocaleString()}, ${fnSpaceY.toLocaleString()})`, rectX + camera.scale / 2, rectY + camera.scale / 2);
 				ctx.shadowColor = "#0000";
 			}
 		}
+	}
+
+	if (settings.tixyEmulator) {
+		ctx.lineWidth = camera.scale / 3;
+		ctx.strokeStyle = '#F24';
+		ctx.strokeRect(
+			gridX1 - ctx.lineWidth / 2,
+			gridY1 - ctx.lineWidth / 2,
+			gridX2 - gridX1 + ctx.lineWidth,
+			gridY2 - gridY1 + ctx.lineWidth
+		);
 	}
 };
 
