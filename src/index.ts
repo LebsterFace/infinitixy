@@ -140,7 +140,6 @@ const drawCounter = () => {
 
 const settings = {
 	useCircles: true,
-	clampValues: true,
 	cartesian: true,
 	grid: false,
 	smoothZoom: true,
@@ -150,7 +149,6 @@ const settings = {
 
 const checkboxes: Record<keyof typeof settings, HTMLInputElement> = {
 	useCircles: document.querySelector("#circles")!,
-	clampValues: document.querySelector("#clamp")!,
 	cartesian: document.querySelector("#cartesian")!,
 	grid: document.querySelector("#grid")!,
 	smoothZoom: document.querySelector("#smooth-zoom")!,
@@ -193,7 +191,7 @@ const redraw = () => {
 	for (let y = fnSpaceTop; y < fnSpaceBottom; y++) {
 		for (let x = fnSpaceLeft; x < fnSpaceRight; x++) {
 			const fnSpaceX = x;
-			const fnSpaceY = settings.cartesian ? -y : y;
+			const fnSpaceY = settings.cartesian ? -y + 0.0 : y;
 
 			const rectX = (x * camera.scale) - (camera.scale * camera.x);
 			const rectY = (y * camera.scale) - (camera.scale * camera.y);
@@ -206,7 +204,7 @@ const redraw = () => {
 				mouseY
 			);
 
-			if (settings.clampValues) tixyColor = Math.max(-1, Math.min(tixyColor, 1));
+			tixyColor = Math.max(-1, Math.min(tixyColor, 1));
 
 			if (settings.useCircles) {
 				ctx.fillStyle = tixyColor < 0 ? `#F24` : `#FFF`;
