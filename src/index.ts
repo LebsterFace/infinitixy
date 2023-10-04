@@ -176,6 +176,12 @@ document.querySelector("#fullscreen")!.addEventListener("click", () => {
 	canvas.requestFullscreen();
 }, { passive: true });
 
+const canvasSpaceToFnSpace = (x: number, y: number) => {
+	const fnSpaceX = ((x - camera.scale / 2) + (camera.scale * camera.x)) / camera.scale;
+	const fnSpaceY = ((y - camera.scale / 2) + (camera.scale * camera.y)) / camera.scale;
+	return [fnSpaceX, settings.cartesian ? -fnSpaceY + 0.0 : fnSpaceY];
+};
+
 const redraw = () => {
 	updateCamera();
 
@@ -186,6 +192,7 @@ const redraw = () => {
 	const fnSpaceTop = Math.floor(camera.y);
 	const fnSpaceRight = Math.ceil(camera.x + (canvas.width / camera.scale));
 	const fnSpaceBottom = Math.ceil(camera.y + (canvas.height / camera.scale));
+	const [fnSpaceMouseX, fnSpaceMouseY] = canvasSpaceToFnSpace(mouseX, mouseY);
 
 	ctx.font = `${camera.scale / 8}px Computer Modern Serif, serif`;
 	ctx.textAlign = 'center';
@@ -203,8 +210,8 @@ const redraw = () => {
 				time,
 				fnSpaceX,
 				fnSpaceY,
-				mouseX,
-				mouseY
+				fnSpaceMouseX,
+				fnSpaceMouseY,
 			);
 
 			tixyColor = Math.max(-1, Math.min(tixyColor, 1));
