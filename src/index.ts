@@ -185,8 +185,6 @@ const canvasSpaceToFnSpace = (x: number, y: number) => {
 };
 
 const redraw = () => {
-	updateCamera();
-
 	const time = (performance.now() - TIME_START) / 1000;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -259,6 +257,7 @@ const redraw = () => {
 requestAnimationFrame(function loop(now) {
 	requestAnimationFrame(loop);
 	logFrame(now);
+	updateCamera();
 	redraw();
 	if (settings.showFPS) drawCounter();
 });
