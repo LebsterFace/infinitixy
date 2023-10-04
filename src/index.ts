@@ -1,4 +1,7 @@
 const canvas = document.querySelector("canvas")!;
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+
 const ctx = canvas.getContext("2d")!;
 
 let userFunc = (
@@ -42,7 +45,8 @@ const camera = {
 	x: START_X,
 	y: START_Y,
 	scale: START_SCALE,
-	velocity: { x: 0, y: 0, scale: 0 }
+	scaleVelocity: 0,
+	target: { x: START_X, y: START_Y }
 };
 
 let mouseDown = false;
@@ -59,37 +63,37 @@ window.addEventListener("mousemove", ({ movementX, movementY, clientX, clientY }
 	mouseY = Math.max(0, Math.min((clientY - top) / heightRatio, canvas.height));
 
 	if (mouseDown) {
-		camera.x -= movementX / camera.scale / widthRatio;
-		camera.y -= movementY / camera.scale / heightRatio;
+		camera.target.x -= movementX / camera.scale / widthRatio;
+		camera.target.y -= movementY / camera.scale / heightRatio;
 	}
 }, { passive: true });
 
 canvas.addEventListener("wheel", ({ deltaY }) => {
-	camera.velocity.scale += deltaY;
+	camera.scaleVelocity += deltaY;
 }, { passive: true });
 
-const updateCamera = () => {
-	camera.velocity.scale *= 0.8;
+const lerp = (start: number, end: number, t: number): number => (1 - t) * start + t * end;
 
-	const oldScale = camera.scale;
-	const zoomFactor = camera.velocity.scale / -4000;
-	// const newScale = Math.min(1000, Math.max(10, camera.scale * (1 + (deltaY > 0 ? -zoomFactor : zoomFactor))));
-	const newScale = Math.min(1000, Math.max(10, camera.scale * (1 + zoomFactor)));
-
-	// Calculate the center point in canvas coordinates
-	const centerX = canvas.width / 2;
-	const centerY = canvas.height / 2;
-
+const fixPositionForZoom = (oldScale: number, newScale: number, container: { x: number, y: number }) => {
 	// Convert the center point to function space coordinates
-	const centerFnSpaceX = (centerX / oldScale) + camera.x;
-	const centerFnSpaceY = (centerY / oldScale) + camera.y;
-
-	// Update the camera scale
-	camera.scale = newScale;
+	const centerFnSpaceX = (centerX / oldScale) + container.x;
+	const centerFnSpaceY = (centerY / oldScale) + container.y;
 
 	// Adjust camera position to keep the center fixed
-	camera.x = centerFnSpaceX - (centerX / newScale);
-	camera.y = centerFnSpaceY - (centerY / newScale);
+	container.x = centerFnSpaceX - (centerX / newScale);
+	container.y = centerFnSpaceY - (centerY / newScale);
+};
+
+const updateCamera = () => {
+	camera.x = lerp(camera.x, camera.target.x, 0.2);
+	camera.y = lerp(camera.y, camera.target.y, 0.2);
+
+	camera.scaleVelocity *= 0.8;
+	const zoomFactor = camera.scaleVelocity / -4000;
+	const newScale = Math.min(1000, Math.max(10, camera.scale * (1 + zoomFactor)));
+	fixPositionForZoom(camera.scale, newScale, camera);
+	fixPositionForZoom(camera.scale, newScale, camera.target);
+	camera.scale = newScale;
 };
 
 const FRAME_TIMES = Array.from({ length: 30 }, () => 16.666);
