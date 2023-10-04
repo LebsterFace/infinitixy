@@ -166,7 +166,10 @@ for (const [key, element] of Object.entries(checkboxes) as Array<[keyof typeof s
 document.querySelector("#resetCamera")!.addEventListener("click", () => {
 	camera.x = START_X;
 	camera.y = START_Y;
+	camera.target.x = START_X;
+	camera.target.y = START_Y;
 	camera.scale = START_SCALE;
+	camera.scaleVelocity = 0;
 }, { passive: true });
 
 document.querySelector("#fullscreen")!.addEventListener("click", () => {
