@@ -9,7 +9,9 @@ let userFunc = (
 	x: number,
 	y: number,
 	mx: number,
-	my: number
+	my: number,
+	si: number,
+	sc: number
 ) => 0;
 
 let TIME_START = 0;
@@ -18,7 +20,7 @@ const MathDestructure = `const {${Object.getOwnPropertyNames(Math).join(",")}} =
 const setFunc = () => {
 	try {
 		// @ts-ignore
-		userFunc = new Function("t", "x", "y", "mx", "my", `${MathDestructure};try{return ${codeInput.value};}catch (e){return 0;}`);
+		userFunc = new Function("t", "x", "y", "mx", "my", "si", "sc", `${MathDestructure};try{return ${codeInput.value};}catch (e){return 0;}`);
 	} catch (e) {
 		userFunc = () => 0;
 	}
@@ -198,8 +200,11 @@ const redraw = () => {
 	ctx.textAlign = 'center';
 	ctx.textBaseline = 'middle';
 
+	const screenCount = (fnSpaceBottom - fnSpaceTop) * (fnSpaceRight - fnSpaceLeft);
+	let screenIndex = 0;
 	for (let y = fnSpaceTop; y < fnSpaceBottom; y++) {
 		for (let x = fnSpaceLeft; x < fnSpaceRight; x++) {
+			screenIndex++;
 			const fnSpaceX = x;
 			const fnSpaceY = settings.cartesian ? -y + 0.0 : y;
 
@@ -212,6 +217,8 @@ const redraw = () => {
 				fnSpaceY,
 				fnSpaceMouseX,
 				fnSpaceMouseY,
+				screenIndex,
+				screenCount
 			);
 
 			tixyColor = Math.max(-1, Math.min(tixyColor, 1));
