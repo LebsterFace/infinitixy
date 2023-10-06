@@ -5,4 +5,4 @@
 - HSV
 - HSB
 ## Full resolution render (setting)
-## Fix panning when browser zoomed (via `window.devicePixelRatio`)
+## Polar coordinate option

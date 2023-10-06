@@ -111,8 +111,8 @@ window.addEventListener("mousemove", ({ movementX, movementY, clientX, clientY }
 	mouseY = Math.max(0, Math.min((clientY - top) / heightRatio, canvas.height));
 
 	if (mouseDown) {
-		camera.target.x -= movementX / camera.scale / widthRatio;
-		camera.target.y -= movementY / camera.scale / heightRatio;
+		camera.target.x -= movementX / devicePixelRatio / camera.scale / widthRatio;
+		camera.target.y -= movementY / devicePixelRatio / camera.scale / heightRatio;
 	}
 }, { passive: true });
 
@@ -156,34 +156,6 @@ const updateCamera = () => {
 		camera.scaleVelocity *= 0.8;
 		zoomBy(camera.scaleVelocity / -4000);
 	}
-};
-
-const FRAME_TIMES = Array.from({ length: 30 }, () => 16.666);
-let lastFrameTime = performance.now();
-
-const getFramesPerSecond = (): number => 1000 / (FRAME_TIMES.reduce((a, b) => a + b) / FRAME_TIMES.length);
-
-/** Marks the end of a frame (for averaging) */
-const logFrame = (NOW: number) => {
-	FRAME_TIMES.shift();
-	FRAME_TIMES.push(NOW - lastFrameTime);
-	lastFrameTime = NOW;
-};
-
-/** Draws an FPS counter to the canvas */
-const drawCounter = () => {
-	const fps = getFramesPerSecond();
-
-	ctx.strokeStyle = "#000";
-	ctx.fillStyle = "#fff";
-	ctx.textAlign = "left";
-	ctx.textBaseline = "top";
-	ctx.font = '900 24px JetBrains Mono, monospace';
-	ctx.lineWidth = 3;
-
-	const MSG = `${fps.toFixed(0)} FPS`;
-	ctx.strokeText(MSG, 10, 10);
-	ctx.fillText(MSG, 10, 10);
 };
 
 const fixCartesianality = (y: number) => {
@@ -298,6 +270,34 @@ const redraw = () => {
 			gridY2 - gridY1 + ctx.lineWidth
 		);
 	}
+};
+
+const FRAME_TIMES = Array.from({ length: 30 }, () => 16.666);
+let lastFrameTime = performance.now();
+
+const getFramesPerSecond = (): number => 1000 / (FRAME_TIMES.reduce((a, b) => a + b) / FRAME_TIMES.length);
+
+/** Marks the end of a frame (for averaging) */
+const logFrame = (NOW: number) => {
+	FRAME_TIMES.shift();
+	FRAME_TIMES.push(NOW - lastFrameTime);
+	lastFrameTime = NOW;
+};
+
+/** Draws an FPS counter to the canvas */
+const drawCounter = () => {
+	const fps = getFramesPerSecond();
+
+	ctx.strokeStyle = "#000";
+	ctx.fillStyle = "#fff";
+	ctx.textAlign = "left";
+	ctx.textBaseline = "top";
+	ctx.font = '900 24px JetBrains Mono, monospace';
+	ctx.lineWidth = 3;
+
+	const MSG = `${fps.toFixed(0)} FPS`;
+	ctx.strokeText(MSG, 10, 10);
+	ctx.fillText(MSG, 10, 10);
 };
 
 requestAnimationFrame(function loop(now) {
