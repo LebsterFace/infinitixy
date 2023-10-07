@@ -20,7 +20,7 @@ const MathDestructure = `const {${Object.getOwnPropertyNames(Math).join(",")}} =
 const setFunc = () => {
 	try {
 		// @ts-ignore
-		userFunc = new Function("t", "i", "x", "y", "mx", "my", "c", `${MathDestructure};try{return ${codeInput.value};}catch (e){return 0;}`);
+		userFunc = new Function("t", "i", "x", "y", "mx", "my", "c", `${MathDestructure};try{return (${codeInput.value});}catch (e){return 0;}`);
 	} catch (e) {
 		userFunc = () => 0;
 	}
@@ -31,13 +31,15 @@ const setFunc = () => {
 codeInput.addEventListener("input", setFunc, { passive: true });
 setFunc();
 
-const circleToPixelColor = (v: number): [number, number, number] => {
+const useSquaresColor = (v: number): [number, number, number] => {
 	const r = Math.max(0, Math.min((201.24 * v * v), 255));
 	if (v > 0) return [r, r, r];
 	const g = Math.max(0, Math.min((26.82 * v * v), 255));
 	const b = Math.max(0, Math.min((53.66 * v * v), 255));
 	return [r, g, b];
 };
+
+const useColorsColor = (pixelValue: number) => `#${Math.max(0, Math.min(Math.round(pixelValue), 0xFFFFFF)).toString(16).padStart(6, "0")}`;
 
 const rgb = (r: number, g: number, b: number) => {
 	return (
@@ -109,6 +111,7 @@ const settings = {
 	cartesian: true,
 	color: false,
 	grid: false,
+	gridValues: false,
 	tixyEmulator: false,
 	smoothZoom: true,
 	smoothPan: true,
@@ -120,6 +123,7 @@ const checkboxes: Record<keyof typeof settings, HTMLInputElement> = {
 	cartesian: document.querySelector("#cartesian")!,
 	color: document.querySelector("#color")!,
 	grid: document.querySelector("#grid")!,
+	gridValues: document.querySelector("#grid-values")!,
 	tixyEmulator: document.querySelector("#tixy-emulator")!,
 	smoothZoom: document.querySelector("#smooth-zoom")!,
 	smoothPan: document.querySelector("#smooth-pan")!,
@@ -289,7 +293,7 @@ const redraw = () => {
 		gridY2 = y2;
 	}
 
-	ctx.font = `${camera.scale / 8}px Computer Modern Serif, serif`;
+	ctx.font = `${camera.scale / 8}px ${settings.gridValues ? "monospace" : "Computer Modern Serif, serif"}`;
 	ctx.textAlign = 'center';
 	ctx.textBaseline = 'middle';
 
@@ -304,7 +308,7 @@ const redraw = () => {
 			const rectX = (x * camera.scale) - (camera.scale * camera.x);
 			const rectY = (y * camera.scale) - (camera.scale * camera.y);
 
-			const pixelValue = userFunc(
+			let pixelValue = userFunc(
 				time,
 				screenIndex,
 				fnSpaceX,
@@ -314,14 +318,16 @@ const redraw = () => {
 				screenCount
 			);
 
+			if (Number.isNaN(pixelValue)) pixelValue = 0;
+
 			const tixyColor = Math.max(-1, Math.min(pixelValue, 1));
 
 			if (settings.color) {
-				ctx.fillStyle = `#${Math.max(0, Math.min(Math.round(pixelValue), 0xFFFFFF)).toString(16).padStart(6, "0")}`;
+				ctx.fillStyle = useColorsColor(pixelValue);
 			} else if (settings.useCircles) {
 				ctx.fillStyle = tixyColor < 0 ? "#F24" : "#FFF";
 			} else {
-				const [r, g, b] = circleToPixelColor(tixyColor);
+				const [r, g, b] = useSquaresColor(tixyColor);
 				ctx.fillStyle = `rgb(${r} ${g} ${b})`;
 			}
 
@@ -355,8 +361,11 @@ const redraw = () => {
 
 				ctx.shadowColor = "#000";
 				ctx.shadowBlur = 5;
-				ctx.fillStyle = (fnSpaceY === 0 || fnSpaceX === 0) && !settings.tixyEmulator ? '#FF0' : '#EEE';
-				ctx.fillText(`(${fnSpaceX.toLocaleString()}, ${fnSpaceY.toLocaleString()})`, rectX + camera.scale / 2, rectY + camera.scale / 2);
+				ctx.fillStyle = (fnSpaceY === 0 || fnSpaceX === 0) && !settings.tixyEmulator && !settings.gridValues ? '#FF0' : '#EEE';
+				const label = settings.gridValues ?
+					(settings.color ? useColorsColor(pixelValue) : pixelValue.toLocaleString([], { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" })) :
+					`(${fnSpaceX.toLocaleString()}, ${fnSpaceY.toLocaleString()})`;
+				ctx.fillText(label, rectX + camera.scale / 2, rectY + camera.scale / 2, camera.scale * 0.95);
 				ctx.shadowColor = "#0000";
 			}
 		}
