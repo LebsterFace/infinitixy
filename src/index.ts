@@ -170,7 +170,7 @@ let mouseY = 0;
 
 canvas.addEventListener("mousedown", () => { mouseDown = true; }, { passive: true });
 window.addEventListener("mouseup", () => { mouseDown = false; }, { passive: true });
-window.addEventListener("mousemove", ({ movementX, movementY, clientX, clientY }) => {
+const handleMovement = ({ movementX, movementY, clientX, clientY }: Record<`${'movement' | 'client'}${'X' | 'Y'}`, number>) => {
 	const { width, height, top, left } = canvas.getBoundingClientRect();
 	const widthRatio = width / canvas.width;
 	const heightRatio = height / canvas.height;
@@ -178,9 +178,31 @@ window.addEventListener("mousemove", ({ movementX, movementY, clientX, clientY }
 	mouseY = Math.max(0, Math.min((clientY - top) / heightRatio, canvas.height));
 
 	if (mouseDown) {
-		camera.target.x -= movementX / devicePixelRatio / camera.scale / widthRatio;
-		camera.target.y -= movementY / devicePixelRatio / camera.scale / heightRatio;
+		camera.target.x -= movementX / camera.scale / widthRatio;
+		camera.target.y -= movementY / camera.scale / heightRatio;
 	}
+};
+window.addEventListener("mousemove", handleMovement, { passive: true });
+
+let previousTouch: Touch | null = null;
+canvas.addEventListener("touchstart", ({ changedTouches }) => {
+	previousTouch = changedTouches[0];
+	mouseDown = true;
+}, { passive: true });
+
+window.addEventListener("touchend", () => {
+	previousTouch = null;
+	mouseDown = false;
+}, { passive: true });
+
+window.addEventListener("touchmove", ({ changedTouches }) => {
+	const { clientX, clientY, screenX, screenY } = changedTouches[0];
+	handleMovement({
+		clientX, clientY,
+		movementX: screenX - previousTouch!.screenX,
+		movementY: screenY - previousTouch!.screenY
+	});
+	previousTouch = changedTouches[0];
 }, { passive: true });
 
 canvas.addEventListener("wheel", ({ deltaY }) => {
