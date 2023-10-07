@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- Website designed by "Lebster" -->
-<!-- Date created: 30th September 2023 -->
+<!-- Date created: 7th October 2023 -->
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
@@ -14,10 +14,7 @@
 	</head>
 	<body>
 		<canvas width="1920" height="1080"></canvas>
-		<label for="code">
-			<span>(t, i, x, y, mx, my, c) =></span>
-			<input type="text" name="code" id="code" placeholder="..." value="sin(t - hypot(x, y))">
-		</label>
+		<input type="text" name="code" id="code" placeholder="..." value="sin(t - hypot(x, y))">
 		<div id="settings">
 			<label for="circles">
 				<input type="checkbox" name="circles" id="circles" checked>
@@ -27,13 +24,18 @@
 				<input type="checkbox" name="cartesian" id="cartesian" checked>
 				Cartesian
 			</label>
-			<label for="grid">
-				<input type="checkbox" name="grid" id="grid">
-				Grid
+			<label for="color">
+				<input type="checkbox" name="color" id="color">
+				Color
 			</label>
 			<label for="tixy-emulator">
 				<input type="checkbox" name="tixy-emulator" id="tixy-emulator">
 				TIXY Emulator
+			</label>
+			<hr>
+			<label for="grid">
+				<input type="checkbox" name="grid" id="grid">
+				Grid
 			</label>
 			<label for="smooth-zoom">
 				<input type="checkbox" name="smooth-zoom" id="smooth-zoom">

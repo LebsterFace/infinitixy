@@ -31,17 +31,83 @@ const setFunc = () => {
 codeInput.addEventListener("input", setFunc, { passive: true });
 setFunc();
 
-const circleToPixelColor = (v: number): `rgb(${number} ${number} ${number})` => {
+const circleToPixelColor = (v: number): [number, number, number] => {
 	const r = Math.max(0, Math.min((201.24 * v * v), 255));
-	if (v > 0) return `rgb(${r} ${r} ${r})`;
+	if (v > 0) return [r, r, r];
 	const g = Math.max(0, Math.min((26.82 * v * v), 255));
 	const b = Math.max(0, Math.min((53.66 * v * v), 255));
-	return `rgb(${r} ${g} ${b})`;
+	return [r, g, b];
+};
+
+const rgb = (r: number, g: number, b: number) => {
+	return (
+		(Math.max(0, Math.min(r, 255)) << 16) |
+		(Math.max(0, Math.min(g, 255)) << 8) |
+		Math.max(0, Math.min(b, 255))
+	);
+};
+
+const hsv = (h: number, s: number, v: number, normalise = true) => {
+	if (normalise) {
+		h /= 360;
+		s = Math.max(0, Math.min(s / 100, 1));
+		v = Math.max(0, Math.min(v / 100, 1));
+	}
+
+	const i = Math.floor(h * 6);
+	const f = h * 6 - i;
+	const p = v * (1 - s);
+	const q = v * (1 - f * s);
+	const t = v * (1 - (1 - f) * s);
+
+	let r: number, g: number, b: number;
+	switch (i % 6) {
+		default: r = v, g = t, b = p; break;
+		case 1: r = q, g = v, b = p; break;
+		case 2: r = p, g = v, b = t; break;
+		case 3: r = p, g = q, b = v; break;
+		case 4: r = t, g = p, b = v; break;
+		case 5: r = v, g = p, b = q; break;
+	}
+
+	return rgb(
+		Math.round(r * 255),
+		Math.round(g * 255),
+		Math.round(b * 255)
+	);
+};
+
+const hsb = hsv;
+
+const hsl = (h: number, s: number, l: number) => {
+	h /= 360;
+	s = Math.max(0, Math.min(s / 100, 1));
+	l = Math.max(0, Math.min(l / 100, 1));
+
+	l *= 2;
+	s *= (l <= 1) ? l : 2 - l;
+	return hsv(h, (2 * s) / (l + s), (l + s) / 2, false);
+};
+
+const hex = (str: string): number => {
+	if (str.startsWith("#")) str = str.slice(1);
+	if (str.length !== 3 && str.length !== 4 && str.length !== 6 && str.length !== 8)
+		return 0;
+
+	// #RGB
+	if (str.length === 3) str += 'F';
+	// #RGBA
+	if (str.length === 4) str = [...str].map(c => c.repeat(2)).join('');
+	// #RRGGBB
+	if (str.length === 6) str += 'FF';
+
+	return parseInt(str, 16) >>> 8; // Remove alpha
 };
 
 const settings = {
 	useCircles: true,
 	cartesian: true,
+	color: false,
 	grid: false,
 	tixyEmulator: false,
 	smoothZoom: true,
@@ -52,6 +118,7 @@ const settings = {
 const checkboxes: Record<keyof typeof settings, HTMLInputElement> = {
 	useCircles: document.querySelector("#circles")!,
 	cartesian: document.querySelector("#cartesian")!,
+	color: document.querySelector("#color")!,
 	grid: document.querySelector("#grid")!,
 	tixyEmulator: document.querySelector("#tixy-emulator")!,
 	smoothZoom: document.querySelector("#smooth-zoom")!,
@@ -215,7 +282,7 @@ const redraw = () => {
 			const rectX = (x * camera.scale) - (camera.scale * camera.x);
 			const rectY = (y * camera.scale) - (camera.scale * camera.y);
 
-			let tixyColor = userFunc(
+			const pixelValue = userFunc(
 				time,
 				screenIndex,
 				fnSpaceX,
@@ -225,15 +292,28 @@ const redraw = () => {
 				screenCount
 			);
 
-			tixyColor = Math.max(-1, Math.min(tixyColor, 1));
+			const tixyColor = Math.max(-1, Math.min(pixelValue, 1));
+
+			if (settings.color) {
+				ctx.fillStyle = `#${Math.max(0, Math.min(Math.round(pixelValue), 0xFFFFFF)).toString(16).padStart(6, "0")}`;
+			} else if (settings.useCircles) {
+				ctx.fillStyle = tixyColor < 0 ? "#F24" : "#FFF";
+			} else {
+				const [r, g, b] = circleToPixelColor(tixyColor);
+				ctx.fillStyle = `rgb(${r} ${g} ${b})`;
+			}
 
 			if (settings.useCircles) {
-				ctx.fillStyle = tixyColor < 0 ? `#F24` : `#FFF`;
 				ctx.beginPath();
-				ctx.arc(rectX + camera.scale / 2, rectY + camera.scale / 2, Math.abs(tixyColor) * (camera.scale / 2), 0, 2 * Math.PI);
+				ctx.arc(
+					rectX + camera.scale / 2,
+					rectY + camera.scale / 2,
+					(settings.color ? 1 : Math.abs(tixyColor)) * (camera.scale / 2),
+					0, 2 * Math.PI
+				);
+
 				ctx.fill();
 			} else {
-				ctx.fillStyle = circleToPixelColor(tixyColor);
 				ctx.fillRect(rectX, rectY, camera.scale + 1, camera.scale + 1);
 			}
 
