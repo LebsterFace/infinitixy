@@ -1,18 +1,50 @@
+:root {
+	--background-1: #000;
+	--background-2: #0a0a0a;
+	--background-3: #222;
+	--text: #FFF;
+	
+	--canvas-width: min(calc(16 * 75vh / 9), 75vw);
+}
+
+@media (prefers-color-scheme: light) {
+	:root {
+		--background-1: #FFF;
+		--background-2: #f5f5f5;
+		--background-3: #ddd;
+		--text: #000;
+	}
+}
+
 body {
-	background: #000;
+	background: var(--background-1);
 	margin: 0;
-	display: grid;
-	place-items: center;
-	height: 100vh;
-	color: white;
+	
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+
+	gap: 1em;
+	color: var(--text);
 	font-family: 'Roboto Mono', monospace;
 	padding: 1em;
 	box-sizing: border-box;
+	height: 100%;
+	width: 100%;
+	position: fixed;
+	overflow: hidden;
 }
 
 canvas {
-	max-width: 85vw;
-	max-height: 85vh;
+	width: var(--canvas-width);
+	background-color: black;
+}
+
+canvas {
+	width: var(--canvas-width);
+	max-height: 100vh;
+	max-width: 177.7778vh;
 }
 
 #settings {
@@ -21,6 +53,9 @@ canvas {
 	justify-content: center;
 	flex-wrap: wrap;
 	gap: 1em;
+	width: var(--canvas-width);
+}
+
 hr {
 	width: 100%;
 	margin: 0;
@@ -32,16 +67,16 @@ hr {
 	outline: none;
 	box-sizing: border-box;
 	padding: 7px;
-	width: 80vw;
+	width: var(--canvas-width);
 	border-radius: 5px;
-	background: #0a0a0a;
-	color: white;
+	background: var(--background-2);
+	color: var(--text);
 	font-family: 'Roboto Mono', monospace;
 }
 
 button {
-	background: #0a0a0a;
-	color: white;
+	background: var(--background-2);
+	color: var(--text);
 	border: none;
 	outline: none;
 	border-radius: 5px;
@@ -52,12 +87,12 @@ button {
 }
 
 button:hover {
-	background: #222;
+	background: var(--background-3);
 	transform: scale(1.05);
 }
 
 button:active {
-	background: #222;
+	background: var(--background-3);
 	transform: scale(0.95);
 }
 
