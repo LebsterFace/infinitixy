@@ -3,5 +3,11 @@
 		"typescript": "^5.2.2"
 	},
 	"type": "module",
-	"main": "dist/index.js"
+	"name": "infinitixy",
+	"version": "1.0.0",
+	"keywords": [],
+	"author": "Lebster",
+	"license": "ISC",
+	"description": "",
+	"private": true
 }
