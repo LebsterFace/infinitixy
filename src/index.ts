@@ -137,6 +137,17 @@ for (const [key, element] of Object.entries(checkboxes) as Array<[keyof typeof s
 	}, { passive: true });
 }
 
+const helpButton = document.querySelector<HTMLButtonElement>("#help")!;
+if (localStorage.getItem("help-visited")) {
+	helpButton.classList.add("visited");
+}
+
+helpButton.addEventListener("click", () => {
+	window.open("https://github.com/LebsterFace/InfiniTIXY/blob/main/README.md", "_blank");
+	helpButton.classList.add("visited");
+	localStorage.setItem("help-visited", "1");
+}, { passive: true });
+
 let camera = { x: NaN, y: NaN, scale: NaN, scaleVelocity: NaN, target: { x: NaN, y: NaN } };
 const centerCamera = (cx: number, cy: number, scale: number) => {
 	const x = -(centerX / scale) + cx;

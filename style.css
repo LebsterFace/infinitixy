@@ -3,7 +3,7 @@
 	--background-2: #0a0a0a;
 	--background-3: #222;
 	--text: #FFF;
-	
+
 	--canvas-width: min(calc(16 * 75vh / 9), 75vw);
 }
 
@@ -19,7 +19,7 @@
 body {
 	background: var(--background-1);
 	margin: 0;
-	
+
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -99,4 +99,32 @@ button:active {
 label:has(:disabled), :disabled {
 	text-decoration: line-through;
 	opacity: 0.5;
+}
+
+#inspired {
+	position: fixed;
+	right: 1em;
+	bottom: 1em;
+	font-size: 0.75rem;
+}
+
+@keyframes draw-attention {
+	from {
+		box-shadow: 0px 0px 10px -5px gold;
+	}
+
+	to {
+		box-shadow: 0px 0px 25px -5px gold;
+	}
+}
+
+#help {
+	animation-name: draw-attention;
+	animation-duration: 2s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate-reverse;
+}
+
+#help.visited {
+	animation: none;
 }
